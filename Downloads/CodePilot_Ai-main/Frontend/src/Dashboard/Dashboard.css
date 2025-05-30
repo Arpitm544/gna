@@ -1,0 +1,53 @@
+.dashboard-container {
+  min-height: 100vh;
+  background: #fff;
+  padding-bottom: 2rem;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2.5rem 1rem 2.5rem;
+  background: #fff;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0a2540;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.login-btn, .signup-btn {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  background: #0a2540;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.signup-btn {
+  background: #007bff;
+}
+
+.login-btn:hover, .signup-btn:hover {
+  opacity: 0.85;
+}
+
+.dashboard-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 2rem 0 2rem 0;
+  color: #0a2540;
+}
+

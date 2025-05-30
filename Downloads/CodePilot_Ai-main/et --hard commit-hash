@@ -1,0 +1,17 @@
+[33md3906f4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: commit: Added dark mode and light mode functionality
+[33m27bf9aa[m HEAD@{1}: commit: Initial push of login-signup codebase
+[33m8f8c8b5[m HEAD@{2}: commit: Remove all files from tracking but keep locally
+[33mbcc20e2[m HEAD@{3}: reset: moving to origin/main
+[33mbcc20e2[m HEAD@{4}: reset: moving to HEAD
+[33mbcc20e2[m HEAD@{5}: Branch: renamed refs/heads/main to refs/heads/main
+[33mbcc20e2[m HEAD@{7}: Branch: renamed refs/heads/main to refs/heads/main
+[33mbcc20e2[m HEAD@{9}: Branch: renamed refs/heads/main to refs/heads/main
+[33mbcc20e2[m HEAD@{11}: commit: Refactor backend structure and update user schema
+[33m9fe7977[m HEAD@{12}: commit: Add complete Frontend and Backend
+[33m8b80739[m HEAD@{13}: reset: moving to HEAD~1
+[33m183e6d1[m HEAD@{14}: Branch: renamed refs/heads/master to refs/heads/main
+[33m183e6d1[m HEAD@{16}: commit: Add CodePilot-Group26- to .gitignore
+[33m8b80739[m HEAD@{17}: commit: Remove submodule CodePilot-Group26- from tracking
+[33mf07243d[m HEAD@{18}: commit: singuo
+[33mb54cc8a[m HEAD@{19}: commit: Removed submodule CodePilot-Group26- from tracking
+[33mc5e0d4c[m HEAD@{20}: commit (initial): Initial commit excluding sub-repo
