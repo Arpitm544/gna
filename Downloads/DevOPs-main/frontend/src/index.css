@@ -1,0 +1,317 @@
+@import "tailwindcss";
+
+
+body {
+
+  scroll-behavior: smooth;
+  
+}
+
+
+
+.text-performly{
+  display: inline-block;
+  color: aqua;
+  letter-spacing: 7px;
+  width: 100%;
+  border-right: 2px solid white;
+  white-space:nowrap;
+  overflow: hidden;
+  animation:
+  typing 2s steps(9);
+
+}
+@keyframes typing {
+  0% {width: 0;}
+  
+} 
+@keyframes slide {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+.animate-slide {
+  animation: slide 20s linear infinite;
+}
+
+@keyframes slide2 {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+.animate-slide2 {
+  animation: slide2 20s linear infinite;
+}
+
+
+@keyframes loader {
+  from {
+    width: 0;
+  }
+  
+}
+.secondslide-text{
+   animation: slide3 20s linear  infinite;
+
+}
+@keyframes slide3 {
+  0%{
+    transform: translateX(0%);
+  }
+  100%{
+    transform: translateX(-50%);
+  }
+  
+}
+
+.appearanimation{
+  animation: appear 1s linear;
+  animation-timeline: view();
+  animation-range: entry 0% cover 40%;
+}
+.secondtext{
+   animation: appear 1s linear;
+  animation-timeline: view();
+  animation-range: entry 0% cover 40%;
+}
+
+@keyframes appear {
+  from {
+    
+      opacity: 0;
+      transform: translateX(-100%);
+  }to{
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+}
+
+.appearanimation2{
+  animation: appear2 1s linear;
+  animation-timeline: view();
+  animation-range: entry 0% cover 40%;
+}
+@keyframes appear2 {
+  from {
+    
+      opacity: 0;
+      scale: 0;
+  }to{
+    opacity: 1;
+    scale: 1;
+  }
+  
+}
+.cards{
+  transition: 0.5s ease-in-out;
+}
+
+/* .loader-bg { 
+
+  background-color: #000000;
+  height: 1020px;
+  width: 1724px;
+  animation: slideUp 10s cubic-bezier(0.7, 0, 0.20, 1) forwards;
+
+}
+
+@keyframes slideUp {
+  0% {
+    scale: 1;
+
+  }
+  50%{
+    scale: 3;
+    
+  }
+  100% {
+    scale: 10;
+    opacity: 0;
+    background-image: linear-gradient(to top, #000000, #7da3be);
+    
+  }
+} 
+
+.loader-numbers{
+  font-size:60px;
+  color: rgb(255, 255, 255);
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-weight: bold;
+
+
+}
+.bgbg{
+  background-image: linear-gradient(to top, #000000, #7da3be);
+  height:10px;
+  width: 1800px; 
+
+}
+@keyframes full {
+
+  100%{
+    scale: 1;
+    height: 2000px;
+    
+  }
+}   */
+/* --------sign-up start-------- */
+/* .firsthalf{
+  height: 100vh;
+  width: 50%;
+  position: fixed;
+  top: 0;
+  left: 0; 
+
+ }
+.second{
+  height: 100vh;
+  width: 50%;
+  position: fixed;
+  top: 0;right: 0;
+} 
+
+.signup-bg,.signin-bg{
+  display: flex; 
+  height: 70vh;
+  width: 50%;
+  background-image: linear-gradient(to top, #0e466e, #7da3be);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 2rem;
+  animation: signupbodyfade 0.5s  ease-in-out forwards;
+} 
+ @keyframes signupbodyfade{
+  0%{
+    transform: translateY(100%);
+    
+  }
+  100%{
+    trasform: translateY(50%);
+    
+  }
+}
+
+.signup-body, .signin-body{
+  background-image: linear-gradient(to bottom, #051c2d, #f5f5f5);
+  height: 100rem;
+  width: 105rem;
+} 
+ .signup-form h1, .signin-form h1{
+  font-size: 2.5rem;
+  position: absolute; 
+  font-family: Verdana, Geneva, Tahoma, sans-serif; 
+  top: 27%;
+  left: 35%;
+}
+.signin-form h1{
+  top: 19%;
+} 
+
+.signup-form h1:hover{
+  color: #ffffff;
+  transition: all 0.3s;
+}
+
+.signup-form{
+  height: 100%;
+  width: 100%;
+} 
+.signup-grid{
+  display: grid;
+  grid-template-columns: repeat(2);
+  gap: 1rem;
+  padding: 1rem;
+  position: absolute;
+  top: 39%;
+  left:12.5% ;
+  width: 70%;
+} 
+.signin-grid{
+  display: grid;
+
+  gap: 1rem;
+  padding: 1rem;
+  position: absolute;
+  top: 28%;
+  left:12.5% ;
+  width: 70%;
+} 
+
+ .signup-grid input, .signin-grid input{
+  padding: 0.9rem;
+  width: 90%;
+  border-radius: 1rem;
+  border: none;
+}
+.signup-grid input:hover{
+  border: #051c2d solid 2px;
+  transition: all 0.3s;
+} 
+
+.signup-form button, .signin-form button{
+  background-color: transparent;
+  color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: #051c2d solid 2px;
+  width: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  position: fixed;
+  top: 62%;
+  left: 25%;
+} 
+.signin-form button{
+  top: 78%;
+}
+.getstartedtohome{
+  background-color: transparent;
+  color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: #051c2d solid 2px;
+  width: 10%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  position: fixed;
+  top: 47%;
+  left: 20%;
+} 
+
+
+.signup-form button,.signin-form button:hover{
+  background-color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  transition: 0.3s;
+  border: none;
+
+}
+.new-user{
+  text-decoration: none;
+  color: #ffffff;
+  position: absolute;
+  top: 75%;
+  left: 30%;
+  font-size: 1.2rem;
+  
+} 
+
+
+.slides{
+ 
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  
+}
+.slides:hover{
+  scale: 1.1;
+  transition: all ease-in-out 1s;
+}   */
