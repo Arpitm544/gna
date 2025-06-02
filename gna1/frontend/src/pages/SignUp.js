@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import {
   Container,
   Paper,
@@ -14,13 +14,13 @@ import {
   Select,
   MenuItem,
   Link
-} from '@mui/material';
-import { register } from '../store/slices/authSlice';
+} from '@mui/material'
+import { register } from '../store/slices/authSlice'
 
 const SignUp = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -29,52 +29,52 @@ const SignUp = () => {
     confirmPassword: '',
     phone: '',
     role: 'RESTAURANT_MANAGER'
-  });
+  })
 
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState({})
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(user.role === 'RESTAURANT_MANAGER' ? '/restaurant' : '/delivery');
+      navigate(user.role === 'RESTAURANT_MANAGER' ? '/restaurant' : '/delivery')
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate])
 
   const validateForm = () => {
-    const errors = {};
-    if (!formData.name.trim()) errors.name = 'Name is required';
-    if (!formData.email.trim()) errors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email is invalid';
-    if (!formData.password) errors.password = 'Password is required';
-    else if (formData.password.length < 6) errors.password = 'Password must be at least 6 characters';
+    const errors = {}
+    if (!formData.name.trim()) errors.name = 'Name is required'
+    if (!formData.email.trim()) errors.email = 'Email is required'
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email is invalid'
+    if (!formData.password) errors.password = 'Password is required'
+    else if (formData.password.length < 6) errors.password = 'Password must be at least 6 characters'
     if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = 'Passwords do not match'
     }
-    if (!formData.phone.trim()) errors.phone = 'Phone number is required';
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+    if (!formData.phone.trim()) errors.phone = 'Phone number is required'
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
-    });
+    })
     // Clear validation error when user starts typing
     if (validationErrors[e.target.name]) {
       setValidationErrors({
         ...validationErrors,
         [e.target.name]: ''
-      });
+      })
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     if (validateForm()) {
-      const { confirmPassword, ...signUpData } = formData;
-      dispatch(register(signUpData));
+      const { confirmPassword, ...signUpData } = formData
+      dispatch(register(signUpData))
     }
-  };
+  }
 
   return (
     <Container component="main" maxWidth="xs">
@@ -209,7 +209,7 @@ const SignUp = () => {
         </Paper>
       </Box>
     </Container>
-  );
-};
+  )
+}
 
-export default SignUp; 
+export default SignUp 

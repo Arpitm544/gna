@@ -1,9 +1,9 @@
-import React from 'react';
-import { Container, Typography, Box, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React from 'react'
+import { Container, Typography, Box, Button } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 
 const NotFound = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <Container maxWidth="sm">
@@ -35,7 +35,7 @@ const NotFound = () => {
         </Button>
       </Box>
     </Container>
-  );
-};
+  )
+}
 
-export default NotFound; 
+export default NotFound 

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Container,
   Grid,
@@ -23,104 +23,146 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
-} from '@mui/material';
+  TableRow,
+  Snackbar,
+  Alert
+} from '@mui/material'
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Refresh as RefreshIcon,
   Logout as LogoutIcon,
   Add as AddIcon,
-  LocalShipping as ShippingIcon
-} from '@mui/icons-material';
-import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
-import { logout } from '../store/slices/authSlice';
-import socketService from '../services/socketService';
-import { useNavigate } from 'react-router-dom';
-import OrderForm from '../components/OrderForm';
-import AssignDeliveryPartner from '../components/AssignDeliveryPartner';
+  LocalShipping as ShippingIcon,
+  Delete as DeleteIcon
+} from '@mui/icons-material'
+import { setOrders, setLoading, setError, updateOrder, removeOrder } from '../store/slices/orderSlice'
+import { logout } from '../store/slices/authSlice'
+import socketService from '../services/socketService'
+import { useNavigate } from 'react-router-dom'
+import OrderForm from '../components/OrderForm'
+import AssignDeliveryPartner from '../components/AssignDeliveryPartner'
+import { createOrder, getOrders, updateOrderStatus, assignDeliveryPartner, deleteOrder } from '../services/orderService'
 
 const RestaurantDashboard = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { orders, loading } = useSelector((state) => state.orders);
-  const [tabValue, setTabValue] = useState(0);
-  const [orderFormOpen, setOrderFormOpen] = useState(false);
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { orders, loading } = useSelector((state) => state.orders)
+  const [tabValue, setTabValue] = useState(0)
+  const [orderFormOpen, setOrderFormOpen] = useState(false)
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
+
+  const fetchOrders = async () => {
+    try {
+      dispatch(setLoading(true))
+      const response = await getOrders()
+      dispatch(setOrders(response))
+    } catch (error) {
+      dispatch(setError(error.message))
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error fetching orders',
+        severity: 'error'
+      })
+    }
+  }
 
   useEffect(() => {
-    dispatch(fetchOrders());
-    socketService.connect();
-  }, [dispatch]);
+    fetchOrders()
+    socketService.connect()
+  }, [dispatch])
 
   useEffect(() => {
     const handleNewOrder = (order) => {
-      dispatch(fetchOrders());
-    };
+      fetchOrders()
+    }
 
     const handleOrderStatusUpdate = (order) => {
-      dispatch(fetchOrders());
-    };
+      dispatch(updateOrder(order))
+    }
 
-    socketService.on('newOrder', handleNewOrder);
-    socketService.on('orderStatusUpdated', handleOrderStatusUpdate);
+    const handleOrderDeleted = ({ orderId }) => {
+      dispatch(removeOrder(orderId))
+    }
+
+    socketService.on('newOrder', handleNewOrder)
+    socketService.on('orderStatusUpdated', handleOrderStatusUpdate)
+    socketService.on('orderDeleted', handleOrderDeleted)
 
     return () => {
-      socketService.off('newOrder', handleNewOrder);
-      socketService.off('orderStatusUpdated', handleOrderStatusUpdate);
-    };
-  }, [dispatch]);
+      socketService.off('newOrder', handleNewOrder)
+      socketService.off('orderStatusUpdated', handleOrderStatusUpdate)
+      socketService.off('orderDeleted', handleOrderDeleted)
+    }
+  }, [dispatch])
 
   const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
+    setTabValue(newValue)
+  }
 
-  const handleStatusUpdate = (orderId, status) => {
-    dispatch(updateOrderStatus({ orderId, status }));
-  };
+  const handleStatusUpdate = async (orderId, status) => {
+    try {
+      dispatch(setLoading(true))
+      const updatedOrder = await updateOrderStatus(orderId, status)
+      dispatch(updateOrder(updatedOrder))
+      setSnackbar({
+        open: true,
+        message: 'Order status updated successfully',
+        severity: 'success'
+      })
+    } catch (error) {
+      dispatch(setError(error.message))
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error updating order status',
+        severity: 'error'
+      })
+    }
+  }
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
+    dispatch(logout())
+    navigate('/login')
+  }
 
   const handleCreateOrder = async (orderData) => {
     try {
       // Validate required fields
       if (!orderData.customerName?.trim()) {
-        throw new Error('Customer name is required');
+        throw new Error('Customer name is required')
       }
       if (!orderData.deliveryAddress?.trim()) {
-        throw new Error('Delivery address is required');
+        throw new Error('Delivery address is required')
       }
       if (!orderData.prepTime || orderData.prepTime < 1) {
-        throw new Error('Preparation time must be at least 1 minute');
+        throw new Error('Preparation time must be at least 1 minute')
       }
       if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
-        throw new Error('At least one item is required');
+        throw new Error('At least one item is required')
       }
 
       // Validate each item
       const validatedItems = orderData.items.map(item => {
         if (!item.name?.trim()) {
-          throw new Error('Item name is required');
+          throw new Error('Item name is required')
         }
         if (!item.quantity || item.quantity < 1) {
-          throw new Error('Item quantity must be at least 1');
+          throw new Error('Item quantity must be at least 1')
         }
         if (!item.price || item.price < 0) {
-          throw new Error('Item price must be non-negative');
+          throw new Error('Item price must be non-negative')
         }
         return {
           name: item.name.trim(),
           quantity: parseInt(item.quantity),
           price: parseFloat(item.price)
-        };
-      });
+        }
+      })
 
       // Calculate total amount
-      const totalAmount = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const totalAmount = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
       // Prepare final order data
       const finalOrderData = {
@@ -129,68 +171,82 @@ const RestaurantDashboard = () => {
         prepTime: parseInt(orderData.prepTime),
         items: validatedItems,
         totalAmount: totalAmount
-      };
-
-      console.log('Sending order data:', finalOrderData);
-
-      const response = await fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(finalOrderData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create order');
       }
 
-      dispatch(fetchOrders());
-      setOrderFormOpen(false);
+      dispatch(setLoading(true))
+      const newOrder = await createOrder(finalOrderData)
+      fetchOrders() // Refresh the orders list
+      setOrderFormOpen(false)
+      setSnackbar({
+        open: true,
+        message: 'Order created successfully',
+        severity: 'success'
+      })
     } catch (error) {
-      console.error('Error creating order:', error);
-      // You might want to show this error to the user via a snackbar or alert
+      dispatch(setError(error.message))
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error creating order',
+        severity: 'error'
+      })
     }
-  };
+  }
 
   const handleAssignPartner = async (partnerId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${selectedOrder._id}/assign`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ deliveryPartnerId: partnerId })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to assign delivery partner');
-      }
-
-      dispatch(fetchOrders());
-      setAssignDialogOpen(false);
+      dispatch(setLoading(true))
+      const updatedOrder = await assignDeliveryPartner(selectedOrder._id, partnerId)
+      dispatch(updateOrder(updatedOrder))
+      setAssignDialogOpen(false)
+      setSnackbar({
+        open: true,
+        message: 'Delivery partner assigned successfully',
+        severity: 'success'
+      })
     } catch (error) {
-      console.error('Error assigning delivery partner:', error);
+      dispatch(setError(error.message))
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error assigning delivery partner',
+        severity: 'error'
+      })
     }
-  };
+  }
+
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      dispatch(setLoading(true))
+      await deleteOrder(orderId)
+      dispatch(removeOrder(orderId))
+      setSnackbar({
+        open: true,
+        message: 'Order deleted successfully',
+        severity: 'success'
+      })
+    } catch (error) {
+      dispatch(setError(error.message))
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error deleting order',
+        severity: 'error'
+      })
+    }
+  }
 
   const getFilteredOrders = () => {
     switch (tabValue) {
       case 0: // Pending
-        return orders.filter(order => order.status === 'PENDING');
+        return orders.filter(order => order.status === 'PENDING')
       case 1: // Preparing
-        return orders.filter(order => order.status === 'PREPARING');
+        return orders.filter(order => order.status === 'PREPARING')
       case 2: // Ready
-        return orders.filter(order => order.status === 'READY');
+        return orders.filter(order => order.status === 'READY')
       case 3: // Completed
-        return orders.filter(order => order.status === 'COMPLETED');
+        return orders.filter(order => order.status === 'COMPLETED')
       default:
-        return orders;
+        return orders
     }
-  };
+  }
 
   const getStatusChip = (status) => {
     const statusConfig = {
@@ -198,24 +254,24 @@ const RestaurantDashboard = () => {
       PREPARING: { color: 'info', label: 'Preparing' },
       READY: { color: 'success', label: 'Ready' },
       COMPLETED: { color: 'default', label: 'Completed' }
-    };
+    }
 
-    const config = statusConfig[status] || { color: 'default', label: status };
+    const config = statusConfig[status] || { color: 'default', label: status }
     return (
       <Chip
         label={config.label}
         color={config.color}
         size="small"
       />
-    );
-  };
+    )
+  }
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
       </Box>
-    );
+    )
   }
 
   return (
@@ -265,7 +321,7 @@ const RestaurantDashboard = () => {
                     New Order
                   </Button>
                   <IconButton 
-                    onClick={() => dispatch(fetchOrders())}
+                    onClick={() => fetchOrders()}
                     sx={{ 
                       bgcolor: 'primary.main',
                       color: 'white',
@@ -351,8 +407,8 @@ const RestaurantDashboard = () => {
                               <IconButton
                                 color="primary"
                                 onClick={() => {
-                                  setSelectedOrder(order);
-                                  setAssignDialogOpen(true);
+                                  setSelectedOrder(order)
+                                  setAssignDialogOpen(true)
                                 }}
                                 sx={{ 
                                   bgcolor: 'primary.light',
@@ -374,6 +430,15 @@ const RestaurantDashboard = () => {
                                 }}
                               >
                                 <CancelIcon />
+                              </IconButton>
+                            )}
+                            {order.status === 'DELIVERED' && (
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteOrder(order._id)}
+                                title="Delete Order"
+                              >
+                                <DeleteIcon />
                               </IconButton>
                             )}
                           </Box>
@@ -400,8 +465,22 @@ const RestaurantDashboard = () => {
         order={selectedOrder}
         onAssign={handleAssignPartner}
       />
-    </Box>
-  );
-};
 
-export default RestaurantDashboard; 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  )
+}
+
+export default RestaurantDashboard 

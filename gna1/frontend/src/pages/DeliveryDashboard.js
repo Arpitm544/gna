@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Container,
   Grid,
@@ -16,85 +16,85 @@ import {
   Chip,
   CircularProgress,
   Button
-} from '@mui/material';
+} from '@mui/material'
 import {
   CheckCircle as CheckCircleIcon,
   Refresh as RefreshIcon,
   LocationOn as LocationIcon
-} from '@mui/icons-material';
-import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
-import socketService from '../services/socketService';
+} from '@mui/icons-material'
+import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice'
+import socketService from '../services/socketService'
 
 const DeliveryDashboard = () => {
-  const dispatch = useDispatch();
-  const { orders, loading } = useSelector((state) => state.orders);
-  const [tabValue, setTabValue] = useState(0);
+  const dispatch = useDispatch()
+  const { orders, loading } = useSelector((state) => state.orders)
+  const [tabValue, setTabValue] = useState(0)
 
   useEffect(() => {
-    dispatch(fetchOrders());
-  }, [dispatch]);
+    dispatch(fetchOrders())
+  }, [dispatch])
 
   useEffect(() => {
     // Listen for new order assignments
     socketService.on('orderAssigned', (order) => {
-      dispatch(fetchOrders());
-    });
+      dispatch(fetchOrders())
+    })
 
     // Listen for order status updates
     socketService.on('orderStatusUpdated', (order) => {
-      dispatch(fetchOrders());
-    });
+      dispatch(fetchOrders())
+    })
 
     return () => {
-      socketService.off('orderAssigned');
-      socketService.off('orderStatusUpdated');
-    };
-  }, [dispatch]);
+      socketService.off('orderAssigned')
+      socketService.off('orderStatusUpdated')
+    }
+  }, [dispatch])
 
   const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
+    setTabValue(newValue)
+  }
 
   const handleStatusUpdate = (orderId, status) => {
-    dispatch(updateOrderStatus({ orderId, status }));
-  };
+    dispatch(updateOrderStatus({ orderId, status }))
+  }
 
   const getFilteredOrders = () => {
     switch (tabValue) {
       case 0: // Assigned
-        return orders.filter(order => order.status === 'ASSIGNED');
+        return orders.filter(order => order.status === 'ASSIGNED')
       case 1: // Picked Up
-        return orders.filter(order => order.status === 'PICKED_UP');
+        return orders.filter(order => order.status === 'PICKED_UP')
       case 2: // Delivered
-        return orders.filter(order => order.status === 'DELIVERED');
+        return orders.filter(order => order.status === 'DELIVERED')
       default:
-        return orders;
+        return orders
     }
-  };
+  }
 
   const getStatusChip = (status) => {
     const statusConfig = {
       ASSIGNED: { color: 'warning', label: 'Assigned' },
       PICKED_UP: { color: 'info', label: 'Picked Up' },
       DELIVERED: { color: 'success', label: 'Delivered' }
-    };
+    }
 
-    const config = statusConfig[status] || { color: 'default', label: status };
+    const config = statusConfig[status] || { color: 'default', label: status }
     return (
       <Chip
         label={config.label}
         color={config.color}
         size="small"
       />
-    );
-  };
+    )
+  }
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress />
       </Box>
-    );
+    )
   }
 
   return (
@@ -182,7 +182,7 @@ const DeliveryDashboard = () => {
         </Grid>
       </Grid>
     </Container>
-  );
-};
+  )
+}
 
-export default DeliveryDashboard; 
+export default DeliveryDashboard 

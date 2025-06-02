@@ -1,72 +1,72 @@
-import { io } from 'socket.io-client';
-import store from '../store';
-import { updateOrderInList } from '../store/slices/orderSlice';
+import { io } from 'socket.io-client'
+import store from '../store'
+import { updateOrderInList } from '../store/slices/orderSlice'
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 
 class SocketService {
   constructor() {
-    this.socket = null;
+    this.socket = null
   }
 
   connect() {
-    if (this.socket) return;
+    if (this.socket) return
 
     this.socket = io(API_URL, {
       auth: {
         token: localStorage.getItem('token')
       }
-    });
+    })
 
     this.socket.on('connect', () => {
-      console.log('Connected to socket server');
-    });
+      console.log('Connected to socket server')
+    })
 
     this.socket.on('disconnect', () => {
-      console.log('Disconnected from socket server');
-    });
+      console.log('Disconnected from socket server')
+    })
 
     this.socket.on('newOrder', (order) => {
-      store.dispatch(updateOrderInList(order));
-    });
+      store.dispatch(updateOrderInList(order))
+    })
 
     this.socket.on('orderAssigned', (data) => {
       // Fetch updated order
-      this.fetchUpdatedOrder(data.orderId);
-    });
+      this.fetchUpdatedOrder(data.orderId)
+    })
 
     this.socket.on('orderStatusUpdated', (data) => {
       // Fetch updated order
-      this.fetchUpdatedOrder(data.orderId);
-    });
+      this.fetchUpdatedOrder(data.orderId)
+    })
 
     this.socket.on('error', (error) => {
-      console.error('Socket error:', error);
-    });
+      console.error('Socket error:', error)
+    })
   }
 
   disconnect() {
     if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+      this.socket.disconnect()
+      this.socket = null
     }
   }
 
   on(event, callback) {
     if (this.socket) {
-      this.socket.on(event, callback);
+      this.socket.on(event, callback)
     }
   }
 
   off(event, callback) {
     if (this.socket) {
-      this.socket.off(event, callback);
+      this.socket.off(event, callback)
     }
   }
 
   emit(event, data) {
     if (this.socket) {
-      this.socket.emit(event, data);
+      this.socket.emit(event, data)
     }
   }
 
@@ -76,13 +76,13 @@ class SocketService {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-      });
-      const order = await response.json();
-      store.dispatch(updateOrderInList(order));
+      })
+      const order = await response.json()
+      store.dispatch(updateOrderInList(order))
     } catch (error) {
-      console.error('Error fetching updated order:', error);
+      console.error('Error fetching updated order:', error)
     }
   }
 }
 
-export default new SocketService(); 
+export default new SocketService() 

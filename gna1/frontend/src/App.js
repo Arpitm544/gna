@@ -1,18 +1,18 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { useSelector } from 'react-redux';
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import { useSelector } from 'react-redux'
 
 // Pages
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import RestaurantDashboard from './pages/RestaurantDashboard';
-import DeliveryDashboard from './pages/DeliveryDashboard';
-import NotFound from './pages/NotFound';
+import Login from './pages/Login'
+import SignUp from './pages/SignUp'
+import RestaurantDashboard from './pages/RestaurantDashboard'
+import DeliveryDashboard from './pages/DeliveryDashboard'
+import NotFound from './pages/NotFound'
 
 // Components
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './components/PrivateRoute'
 
 const theme = createTheme({
   palette: {
@@ -23,10 +23,10 @@ const theme = createTheme({
       main: '#dc004e',
     },
   },
-});
+})
 
 function App() {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth)
 
   return (
     <ThemeProvider theme={theme}>
@@ -65,7 +65,7 @@ function App() {
         </Routes>
       </Router>
     </ThemeProvider>
-  );
+  )
 }
 
-export default App;
+export default App

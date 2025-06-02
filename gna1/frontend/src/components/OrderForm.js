@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -10,8 +10,8 @@ import {
   IconButton,
   Typography,
   Grid
-} from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+} from '@mui/material'
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material'
 
 const OrderForm = ({ open, onClose, onSubmit, initialData = null }) => {
   const [formData, setFormData] = useState(initialData || {
@@ -19,46 +19,46 @@ const OrderForm = ({ open, onClose, onSubmit, initialData = null }) => {
     deliveryAddress: '',
     prepTime: '',
     items: [{ name: '', quantity: '', price: '' }]
-  });
+  })
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
+    }))
+  }
 
   const handleItemChange = (index, field, value) => {
-    const newItems = [...formData.items];
+    const newItems = [...formData.items]
     newItems[index] = {
       ...newItems[index],
       [field]: value
-    };
+    }
     setFormData(prev => ({
       ...prev,
       items: newItems
-    }));
-  };
+    }))
+  }
 
   const addItem = () => {
     setFormData(prev => ({
       ...prev,
       items: [...prev.items, { name: '', quantity: '', price: '' }]
-    }));
-  };
+    }))
+  }
 
   const removeItem = (index) => {
     setFormData(prev => ({
       ...prev,
       items: prev.items.filter((_, i) => i !== index)
-    }));
-  };
+    }))
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    onSubmit(formData)
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -162,7 +162,7 @@ const OrderForm = ({ open, onClose, onSubmit, initialData = null }) => {
         </DialogActions>
       </form>
     </Dialog>
-  );
-};
+  )
+}
 
-export default OrderForm; 
+export default OrderForm 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -13,13 +13,13 @@ import {
   Chip,
   Box,
   CircularProgress
-} from '@mui/material';
-import { DirectionsBike as BikeIcon } from '@mui/icons-material';
+} from '@mui/material'
+import { DirectionsBike as BikeIcon } from '@mui/icons-material'
 
 const AssignDeliveryPartner = ({ open, onClose, order, onAssign }) => {
-  const [partners, setPartners] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [partners, setPartners] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -28,27 +28,27 @@ const AssignDeliveryPartner = ({ open, onClose, order, onAssign }) => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
-        });
-        const data = await response.json();
-        setPartners(data);
+        })
+        const data = await response.json()
+        setPartners(data)
       } catch (err) {
-        setError('Failed to fetch delivery partners');
+        setError('Failed to fetch delivery partners')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
     if (open) {
-      fetchPartners();
+      fetchPartners()
     }
-  }, [open]);
+  }, [open])
 
   const calculateDispatchTime = (partner) => {
-    const prepTime = order.prepTime;
-    const eta = partner.eta || 15; // Default ETA if not provided
-    const dispatchTime = new Date(Date.now() + (prepTime + eta) * 60000);
-    return dispatchTime.toLocaleTimeString();
-  };
+    const prepTime = order.prepTime
+    const eta = partner.eta || 15 // Default ETA if not provided
+    const dispatchTime = new Date(Date.now() + (prepTime + eta) * 60000)
+    return dispatchTime.toLocaleTimeString()
+  }
 
   if (loading) {
     return (
@@ -59,7 +59,7 @@ const AssignDeliveryPartner = ({ open, onClose, order, onAssign }) => {
           </Box>
         </DialogContent>
       </Dialog>
-    );
+    )
   }
 
   if (error) {
@@ -72,7 +72,7 @@ const AssignDeliveryPartner = ({ open, onClose, order, onAssign }) => {
           <Button onClick={onClose}>Close</Button>
         </DialogActions>
       </Dialog>
-    );
+    )
   }
 
   return (
@@ -141,7 +141,7 @@ const AssignDeliveryPartner = ({ open, onClose, order, onAssign }) => {
         <Button onClick={onClose}>Cancel</Button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-export default AssignDeliveryPartner; 
+export default AssignDeliveryPartner 

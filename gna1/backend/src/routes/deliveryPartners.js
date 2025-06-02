@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const Order = require('../models/Order');
-const User = require('../models/User');
-const { auth, checkRole } = require('../middleware/auth');
+const express = require('express')
+const router = express.Router()
+const Order = require('../models/Order')
+const User = require('../models/User')
+const { auth, checkRole } = require('../middleware/auth')
 
 // Get all delivery partners (Restaurant Manager only)
 router.get('/', auth, checkRole(['RESTAURANT_MANAGER']), async (req, res) => {
@@ -10,7 +10,7 @@ router.get('/', auth, checkRole(['RESTAURANT_MANAGER']), async (req, res) => {
     const deliveryPartners = await User.find({
       role: 'DELIVERY_PARTNER',
       isActive: true
-    }).select('-password');
+    }).select('-password')
 
     // Get active orders count for each delivery partner
     const partnersWithOrders = await Promise.all(
@@ -18,47 +18,47 @@ router.get('/', auth, checkRole(['RESTAURANT_MANAGER']), async (req, res) => {
         const activeOrders = await Order.countDocuments({
           assignedDeliveryPartner: partner._id,
           status: { $in: ['PICKED_UP', 'ON_ROUTE'] }
-        });
+        })
 
         return {
           ...partner.toObject(),
           activeOrders
-        };
+        }
       })
-    );
+    )
 
-    res.json(partnersWithOrders);
+    res.json(partnersWithOrders)
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching delivery partners', error: error.message });
+    res.status(500).json({ message: 'Error fetching delivery partners', error: error.message })
   }
-});
+})
 
 // Get delivery partner's assigned orders
 router.get('/:id/orders', auth, async (req, res) => {
   try {
     // Check if user is requesting their own orders or is a restaurant manager
     if (req.user.role === 'DELIVERY_PARTNER' && req.user._id.toString() !== req.params.id) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Access denied' })
     }
 
     const orders = await Order.find({
       assignedDeliveryPartner: req.params.id
     })
     .sort({ createdAt: -1 })
-    .populate('assignedDeliveryPartner', 'name phone');
+    .populate('assignedDeliveryPartner', 'name phone')
 
-    res.json(orders);
+    res.json(orders)
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching orders', error: error.message });
+    res.status(500).json({ message: 'Error fetching orders', error: error.message })
   }
-});
+})
 
 // Get delivery partner's active orders
 router.get('/:id/active-orders', auth, async (req, res) => {
   try {
     // Check if user is requesting their own orders or is a restaurant manager
     if (req.user.role === 'DELIVERY_PARTNER' && req.user._id.toString() !== req.params.id) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Access denied' })
     }
 
     const orders = await Order.find({
@@ -66,20 +66,20 @@ router.get('/:id/active-orders', auth, async (req, res) => {
       status: { $in: ['PICKED_UP', 'ON_ROUTE'] }
     })
     .sort({ createdAt: -1 })
-    .populate('assignedDeliveryPartner', 'name phone');
+    .populate('assignedDeliveryPartner', 'name phone')
 
-    res.json(orders);
+    res.json(orders)
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching active orders', error: error.message });
+    res.status(500).json({ message: 'Error fetching active orders', error: error.message })
   }
-});
+})
 
 // Get delivery partner's completed orders
 router.get('/:id/completed-orders', auth, async (req, res) => {
   try {
     // Check if user is requesting their own orders or is a restaurant manager
     if (req.user.role === 'DELIVERY_PARTNER' && req.user._id.toString() !== req.params.id) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Access denied' })
     }
 
     const orders = await Order.find({
@@ -87,20 +87,20 @@ router.get('/:id/completed-orders', auth, async (req, res) => {
       status: 'DELIVERED'
     })
     .sort({ createdAt: -1 })
-    .populate('assignedDeliveryPartner', 'name phone');
+    .populate('assignedDeliveryPartner', 'name phone')
 
-    res.json(orders);
+    res.json(orders)
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching completed orders', error: error.message });
+    res.status(500).json({ message: 'Error fetching completed orders', error: error.message })
   }
-});
+})
 
 // Get delivery partner's statistics
 router.get('/:id/stats', auth, async (req, res) => {
   try {
     // Check if user is requesting their own stats or is a restaurant manager
     if (req.user.role === 'DELIVERY_PARTNER' && req.user._id.toString() !== req.params.id) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Access denied' })
     }
 
     const [
@@ -137,17 +137,17 @@ router.get('/:id/stats', auth, async (req, res) => {
           }
         }
       ])
-    ]);
+    ])
 
     res.json({
       totalOrders,
       completedOrders,
       activeOrders,
       averageDeliveryTime: averageDeliveryTime[0]?.avgTime || 0
-    });
+    })
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching statistics', error: error.message });
+    res.status(500).json({ message: 'Error fetching statistics', error: error.message })
   }
-});
+})
 
-module.exports = router; 
+module.exports = router 
