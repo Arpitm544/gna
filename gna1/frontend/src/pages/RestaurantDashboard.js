@@ -8,56 +8,36 @@ import {
   Box,
   Tabs,
   Tab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
   IconButton,
   Chip,
   CircularProgress,
   AppBar,
   Toolbar,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  Button
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Refresh as RefreshIcon,
-  Logout as LogoutIcon,
-  Add as AddIcon,
-  AccessTime as AccessTimeIcon
+  Logout as LogoutIcon
 } from '@mui/icons-material';
-import { fetchOrders, updateOrderStatus, createOrder } from '../store/slices/orderSlice';
-import { fetchDeliveryPartners } from '../store/slices/deliverySlice';
+import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
 import { logout } from '../store/slices/authSlice';
 import socketService from '../services/socketService';
 import { useNavigate } from 'react-router-dom';
-import OrderForm from '../components/OrderForm';
 
 const RestaurantDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading } = useSelector((state) => state.orders);
-  const { deliveryPartners } = useSelector((state) => state.delivery);
   const [tabValue, setTabValue] = useState(0);
-  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchOrders());
-    dispatch(fetchDeliveryPartners());
     socketService.connect();
   }, [dispatch]);
 
@@ -92,16 +72,6 @@ const RestaurantDashboard = () => {
     navigate('/login');
   };
 
-  const handleCreateOrder = (orderData) => {
-    dispatch(createOrder(orderData));
-  };
-
-  const handleAssignDeliveryPartner = (orderId, partnerId) => {
-    dispatch(updateOrderStatus({ orderId, deliveryPartnerId: partnerId, status: 'ASSIGNED' }));
-    setIsAssignDialogOpen(false);
-    setSelectedOrder(null);
-  };
-
   const getFilteredOrders = () => {
     switch (tabValue) {
       case 0: // Pending
@@ -133,11 +103,6 @@ const RestaurantDashboard = () => {
         size="small"
       />
     );
-  };
-
-  const formatDispatchTime = (dispatchTime) => {
-    if (!dispatchTime) return 'Not calculated';
-    return new Date(dispatchTime).toLocaleTimeString();
   };
 
   if (loading) {
@@ -186,26 +151,16 @@ const RestaurantDashboard = () => {
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
                   Restaurant Dashboard
                 </Typography>
-                <Box>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setIsOrderFormOpen(true)}
-                    sx={{ mr: 2 }}
-                  >
-                    New Order
-                  </Button>
-                  <IconButton 
-                    onClick={() => dispatch(fetchOrders())}
-                    sx={{ 
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      '&:hover': { bgcolor: 'primary.dark' }
-                    }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Box>
+                <IconButton 
+                  onClick={() => dispatch(fetchOrders())}
+                  sx={{ 
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': { bgcolor: 'primary.dark' }
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
               </Box>
 
               <Tabs 
@@ -228,122 +183,93 @@ const RestaurantDashboard = () => {
                 <Tab label="Completed" />
               </Tabs>
 
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Order ID</TableCell>
-                      <TableCell>Customer</TableCell>
-                      <TableCell>Items</TableCell>
-                      <TableCell>Prep Time</TableCell>
-                      <TableCell>Dispatch Time</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {getFilteredOrders().map((order) => (
-                      <TableRow key={order._id}>
-                        <TableCell>{order.orderId}</TableCell>
-                        <TableCell>{order.customerName}</TableCell>
-                        <TableCell>
-                          {order.items.map(item => `${item.name} (${item.quantity})`).join(', ')}
-                        </TableCell>
-                        <TableCell>{order.prepTime} mins</TableCell>
-                        <TableCell>
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <AccessTimeIcon fontSize="small" />
-                            {formatDispatchTime(order.dispatchTime)}
-                          </Box>
-                        </TableCell>
-                        <TableCell>{getStatusChip(order.status)}</TableCell>
-                        <TableCell>
-                          <Box display="flex" gap={1}>
-                            {order.status === 'PENDING' && (
-                              <>
-                                <IconButton
-                                  color="primary"
-                                  onClick={() => handleStatusUpdate(order._id, 'PREPARING')}
-                                  size="small"
-                                >
-                                  <CheckCircleIcon />
-                                </IconButton>
-                                <IconButton
-                                  color="error"
-                                  onClick={() => handleStatusUpdate(order._id, 'CANCELLED')}
-                                  size="small"
-                                >
-                                  <CancelIcon />
-                                </IconButton>
-                              </>
-                            )}
-                            {order.status === 'PREPARING' && (
-                              <IconButton
-                                color="success"
-                                onClick={() => handleStatusUpdate(order._id, 'READY')}
-                                size="small"
-                              >
-                                <CheckCircleIcon />
-                              </IconButton>
-                            )}
-                            {order.status === 'READY' && !order.deliveryPartner && (
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setIsAssignDialogOpen(true);
-                                }}
-                              >
-                                Assign Delivery
-                              </Button>
-                            )}
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <List sx={{ flex: 1 }}>
+                {getFilteredOrders().map((order) => (
+                  <ListItem
+                    key={order._id}
+                    divider
+                    sx={{
+                      bgcolor: 'background.paper',
+                      mb: 2,
+                      borderRadius: 1,
+                      boxShadow: 1,
+                      '&:hover': {
+                        boxShadow: 2,
+                        bgcolor: 'action.hover'
+                      }
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography variant="h6" color="primary" gutterBottom>
+                          Order #{order._id.slice(-6)}
+                        </Typography>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 1 }}>
+                          <Typography component="span" variant="body1" color="text.primary" sx={{ display: 'block', mb: 1 }}>
+                            {order.items.map(item => `${item.name} (${item.quantity})`).join(', ')}
+                          </Typography>
+                          <Typography component="span" variant="body2" color="text.secondary">
+                            Customer: {order.customerName}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    <ListItemSecondaryAction>
+                      <Box display="flex" alignItems="center" gap={2}>
+                        {getStatusChip(order.status)}
+                        {order.status === 'PENDING' && (
+                          <IconButton
+                            edge="end"
+                            color="primary"
+                            onClick={() => handleStatusUpdate(order._id, 'PREPARING')}
+                            sx={{ 
+                              bgcolor: 'primary.light',
+                              color: 'white',
+                              '&:hover': { bgcolor: 'primary.main' }
+                            }}
+                          >
+                            <CheckCircleIcon />
+                          </IconButton>
+                        )}
+                        {order.status === 'PREPARING' && (
+                          <IconButton
+                            edge="end"
+                            color="success"
+                            onClick={() => handleStatusUpdate(order._id, 'READY')}
+                            sx={{ 
+                              bgcolor: 'success.light',
+                              color: 'white',
+                              '&:hover': { bgcolor: 'success.main' }
+                            }}
+                          >
+                            <CheckCircleIcon />
+                          </IconButton>
+                        )}
+                        {order.status === 'PENDING' && (
+                          <IconButton
+                            edge="end"
+                            color="error"
+                            onClick={() => handleStatusUpdate(order._id, 'CANCELLED')}
+                            sx={{ 
+                              bgcolor: 'error.light',
+                              color: 'white',
+                              '&:hover': { bgcolor: 'error.main' }
+                            }}
+                          >
+                            <CancelIcon />
+                          </IconButton>
+                        )}
+                      </Box>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
             </Paper>
           </Grid>
         </Grid>
       </Container>
-
-      <OrderForm
-        open={isOrderFormOpen}
-        onClose={() => setIsOrderFormOpen(false)}
-        onSubmit={handleCreateOrder}
-        deliveryPartners={deliveryPartners}
-      />
-
-      <Dialog open={isAssignDialogOpen} onClose={() => setIsAssignDialogOpen(false)}>
-        <DialogTitle>Assign Delivery Partner</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Select Delivery Partner</InputLabel>
-            <Select
-              value=""
-              label="Select Delivery Partner"
-              onChange={(e) => handleAssignDeliveryPartner(selectedOrder?._id, e.target.value)}
-            >
-              {deliveryPartners
-                .filter(partner => !orders.some(order => 
-                  order.deliveryPartner === partner._id && 
-                  ['ASSIGNED', 'PICKED_UP'].includes(order.status)
-                ))
-                .map(partner => (
-                  <MenuItem key={partner._id} value={partner._id}>
-                    {partner.name}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
