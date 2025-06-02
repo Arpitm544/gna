@@ -17,24 +17,37 @@ import {
   CircularProgress,
   AppBar,
   Toolbar,
-  Button
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Refresh as RefreshIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  Add as AddIcon,
+  LocalShipping as ShippingIcon
 } from '@mui/icons-material';
 import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
 import { logout } from '../store/slices/authSlice';
 import socketService from '../services/socketService';
 import { useNavigate } from 'react-router-dom';
+import OrderForm from '../components/OrderForm';
+import AssignDeliveryPartner from '../components/AssignDeliveryPartner';
 
 const RestaurantDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading } = useSelector((state) => state.orders);
   const [tabValue, setTabValue] = useState(0);
+  const [orderFormOpen, setOrderFormOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     dispatch(fetchOrders());
@@ -70,6 +83,98 @@ const RestaurantDashboard = () => {
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
+  };
+
+  const handleCreateOrder = async (orderData) => {
+    try {
+      // Validate required fields
+      if (!orderData.customerName?.trim()) {
+        throw new Error('Customer name is required');
+      }
+      if (!orderData.deliveryAddress?.trim()) {
+        throw new Error('Delivery address is required');
+      }
+      if (!orderData.prepTime || orderData.prepTime < 1) {
+        throw new Error('Preparation time must be at least 1 minute');
+      }
+      if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
+        throw new Error('At least one item is required');
+      }
+
+      // Validate each item
+      const validatedItems = orderData.items.map(item => {
+        if (!item.name?.trim()) {
+          throw new Error('Item name is required');
+        }
+        if (!item.quantity || item.quantity < 1) {
+          throw new Error('Item quantity must be at least 1');
+        }
+        if (!item.price || item.price < 0) {
+          throw new Error('Item price must be non-negative');
+        }
+        return {
+          name: item.name.trim(),
+          quantity: parseInt(item.quantity),
+          price: parseFloat(item.price)
+        };
+      });
+
+      // Calculate total amount
+      const totalAmount = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      // Prepare final order data
+      const finalOrderData = {
+        customerName: orderData.customerName.trim(),
+        deliveryAddress: orderData.deliveryAddress.trim(),
+        prepTime: parseInt(orderData.prepTime),
+        items: validatedItems,
+        totalAmount: totalAmount
+      };
+
+      console.log('Sending order data:', finalOrderData);
+
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(finalOrderData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create order');
+      }
+
+      dispatch(fetchOrders());
+      setOrderFormOpen(false);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      // You might want to show this error to the user via a snackbar or alert
+    }
+  };
+
+  const handleAssignPartner = async (partnerId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/orders/${selectedOrder._id}/assign`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ deliveryPartnerId: partnerId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign delivery partner');
+      }
+
+      dispatch(fetchOrders());
+      setAssignDialogOpen(false);
+    } catch (error) {
+      console.error('Error assigning delivery partner:', error);
+    }
   };
 
   const getFilteredOrders = () => {
@@ -151,16 +256,25 @@ const RestaurantDashboard = () => {
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
                   Restaurant Dashboard
                 </Typography>
-                <IconButton 
-                  onClick={() => dispatch(fetchOrders())}
-                  sx={{ 
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '&:hover': { bgcolor: 'primary.dark' }
-                  }}
-                >
-                  <RefreshIcon />
-                </IconButton>
+                <Box display="flex" gap={2}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOrderFormOpen(true)}
+                  >
+                    New Order
+                  </Button>
+                  <IconButton 
+                    onClick={() => dispatch(fetchOrders())}
+                    sx={{ 
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      '&:hover': { bgcolor: 'primary.dark' }
+                    }}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Box>
               </Box>
 
               <Tabs 
@@ -183,93 +297,109 @@ const RestaurantDashboard = () => {
                 <Tab label="Completed" />
               </Tabs>
 
-              <List sx={{ flex: 1 }}>
-                {getFilteredOrders().map((order) => (
-                  <ListItem
-                    key={order._id}
-                    divider
-                    sx={{
-                      bgcolor: 'background.paper',
-                      mb: 2,
-                      borderRadius: 1,
-                      boxShadow: 1,
-                      '&:hover': {
-                        boxShadow: 2,
-                        bgcolor: 'action.hover'
-                      }
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Typography variant="h6" color="primary" gutterBottom>
-                          Order #{order._id.slice(-6)}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box sx={{ mt: 1 }}>
-                          <Typography component="span" variant="body1" color="text.primary" sx={{ display: 'block', mb: 1 }}>
-                            {order.items.map(item => `${item.name} (${item.quantity})`).join(', ')}
-                          </Typography>
-                          <Typography component="span" variant="body2" color="text.secondary">
-                            Customer: {order.customerName}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                    <ListItemSecondaryAction>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        {getStatusChip(order.status)}
-                        {order.status === 'PENDING' && (
-                          <IconButton
-                            edge="end"
-                            color="primary"
-                            onClick={() => handleStatusUpdate(order._id, 'PREPARING')}
-                            sx={{ 
-                              bgcolor: 'primary.light',
-                              color: 'white',
-                              '&:hover': { bgcolor: 'primary.main' }
-                            }}
-                          >
-                            <CheckCircleIcon />
-                          </IconButton>
-                        )}
-                        {order.status === 'PREPARING' && (
-                          <IconButton
-                            edge="end"
-                            color="success"
-                            onClick={() => handleStatusUpdate(order._id, 'READY')}
-                            sx={{ 
-                              bgcolor: 'success.light',
-                              color: 'white',
-                              '&:hover': { bgcolor: 'success.main' }
-                            }}
-                          >
-                            <CheckCircleIcon />
-                          </IconButton>
-                        )}
-                        {order.status === 'PENDING' && (
-                          <IconButton
-                            edge="end"
-                            color="error"
-                            onClick={() => handleStatusUpdate(order._id, 'CANCELLED')}
-                            sx={{ 
-                              bgcolor: 'error.light',
-                              color: 'white',
-                              '&:hover': { bgcolor: 'error.main' }
-                            }}
-                          >
-                            <CancelIcon />
-                          </IconButton>
-                        )}
-                      </Box>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Order ID</TableCell>
+                      <TableCell>Customer</TableCell>
+                      <TableCell>Items</TableCell>
+                      <TableCell>Prep Time</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {getFilteredOrders().map((order) => (
+                      <TableRow key={order._id}>
+                        <TableCell>{order.orderId}</TableCell>
+                        <TableCell>{order.customerName}</TableCell>
+                        <TableCell>
+                          {order.items.map(item => `${item.name} (${item.quantity})`).join(', ')}
+                        </TableCell>
+                        <TableCell>{order.prepTime} mins</TableCell>
+                        <TableCell>{getStatusChip(order.status)}</TableCell>
+                        <TableCell>
+                          <Box display="flex" gap={1}>
+                            {order.status === 'PENDING' && (
+                              <IconButton
+                                color="primary"
+                                onClick={() => handleStatusUpdate(order._id, 'PREPARING')}
+                                sx={{ 
+                                  bgcolor: 'primary.light',
+                                  color: 'white',
+                                  '&:hover': { bgcolor: 'primary.main' }
+                                }}
+                              >
+                                <CheckCircleIcon />
+                              </IconButton>
+                            )}
+                            {order.status === 'PREPARING' && (
+                              <IconButton
+                                color="success"
+                                onClick={() => handleStatusUpdate(order._id, 'READY')}
+                                sx={{ 
+                                  bgcolor: 'success.light',
+                                  color: 'white',
+                                  '&:hover': { bgcolor: 'success.main' }
+                                }}
+                              >
+                                <CheckCircleIcon />
+                              </IconButton>
+                            )}
+                            {order.status === 'READY' && (
+                              <IconButton
+                                color="primary"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setAssignDialogOpen(true);
+                                }}
+                                sx={{ 
+                                  bgcolor: 'primary.light',
+                                  color: 'white',
+                                  '&:hover': { bgcolor: 'primary.main' }
+                                }}
+                              >
+                                <ShippingIcon />
+                              </IconButton>
+                            )}
+                            {order.status === 'PENDING' && (
+                              <IconButton
+                                color="error"
+                                onClick={() => handleStatusUpdate(order._id, 'CANCELLED')}
+                                sx={{ 
+                                  bgcolor: 'error.light',
+                                  color: 'white',
+                                  '&:hover': { bgcolor: 'error.main' }
+                                }}
+                              >
+                                <CancelIcon />
+                              </IconButton>
+                            )}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Paper>
           </Grid>
         </Grid>
       </Container>
+
+      <OrderForm
+        open={orderFormOpen}
+        onClose={() => setOrderFormOpen(false)}
+        onSubmit={handleCreateOrder}
+      />
+
+      <AssignDeliveryPartner
+        open={assignDialogOpen}
+        onClose={() => setAssignDialogOpen(false)}
+        order={selectedOrder}
+        onAssign={handleAssignPartner}
+      />
     </Box>
   );
 };

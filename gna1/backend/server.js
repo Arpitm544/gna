@@ -3,18 +3,15 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
-const dotenv = require('dotenv');
+require('dotenv').config();
 
-// Load environment variables
-dotenv.config();
-
-// Create Express app
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST']
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT"],
+    credentials: true
   }
 });
 
@@ -23,11 +20,11 @@ app.use(cors());
 app.use(express.json());
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/zomato-ops-pro')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/zomato_ops')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Socket.IO connection handling
+// Socket.io connection handling
 io.on('connection', (socket) => {
   console.log('New client connected');
 
@@ -36,21 +33,20 @@ io.on('connection', (socket) => {
   });
 });
 
+// Make io accessible to routes
+app.set('io', io);
+
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/delivery-partners', require('./routes/deliveryPartners'));
+app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/orders', require('./src/routes/orders'));
+app.use('/api/delivery', require('./src/routes/deliveryPartners'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(err.status || 500).json({
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
